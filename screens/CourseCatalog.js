@@ -6,6 +6,8 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { faThLarge } from '@fortawesome/free-solid-svg-icons';
 import { useRoute } from '@react-navigation/native';
 import TopHeaderBar from '../components/TopHeaderBar';
 import SearchBar from '../components/SearchBar';
@@ -42,10 +44,29 @@ function CourseCatalog(props) {
   const config = {
     headers: { Authorization: `Bearer ${props.token}` }
   }
-  const [selectedValue, setSelectedValue] = useState('Please select one');
+  const [catalogReceive,setCatalogReceive]=useState([])
+  const [catalogarray,setCategoryarray]=useState([])
+  const [categoryValue,setCategoryValue]=useState('')
+  const [categoryLevel,setCategoryLevel]=useState([])
+
+  const [selectedValue, setSelectedValue] = useState(<Text styles={{paddingTop: 5}}><FontAwesomeIcon style={styles.myfont} icon={faThLarge} /> </Text>);
   const [openReceiverDropdown, setOpenReceiverDropdown] = useState(false);
 
+
   var breadcrumbArray = [];
+  var myarray=[];
+
+ useEffect(() => {
+    catalogReceive.map((receivename)=>{
+        myarray.push({value:receivename.name});
+        //console.log(myarray);
+        setCategoryarray(myarray);
+
+    });
+    myarray.unshift({value:"All"})
+  }, [catalogReceive])
+
+
 
   // check if payment is enable in the settings
   // if yes, display course price and add to cart button. if no, hide the price and add to cart button.
@@ -111,9 +132,9 @@ function CourseCatalog(props) {
       `${BaseURL.appURL}/call/api/v1/getAllCategories`,
       config
     ).then(function (res) {
-//          console.log(res.data.categories);
+          //console.log(res.data);
       if (res.status == 200) {
-//        setCategories(res.data.categories)
+//       setCategoriesName(res.data.categories)
 //        setSubcategories(res.data.subcategories)
 //        setCourses(res.data.courses)
       }
@@ -130,9 +151,9 @@ const getgetCategory = () => {
       `${BaseURL.appURL}/call/api/v1/getCategory`,
       config
     ).then(function (res) {
-            console.log(res)
+            //console.log(res)
       if (res.status == 200) {
-            console.log(res.data)
+            //console.log(res.data)
       }
     }).catch(function (error) {
       setErrorMsg(error.response.data.msg + "\nPlease try again!")
@@ -141,7 +162,25 @@ const getgetCategory = () => {
       }, 2000);
     });
   }
+   //get user category
+   const getUserCategory=()=>{
+        axios.get(
+            `${BaseURL.appURL}/call/api/v1/getUserCategory`,
+            config
+        ).then(function (res){
+            //console.log(res)
+        if(res.status==200){
+            //console.log(res.data)
 
+            setCatalogReceive(res.data.catalog)
+            }
+        }).catch(function (error){
+            setErrorMsg(error.response.data.msg+"\nPlease try again!")
+            setTimeout(()=>{
+                setErrorMsg('')
+            },2000);
+        });
+   }
   // get all categories
   const getCourses = () => {
     // reset everything
@@ -159,7 +198,9 @@ const getgetCategory = () => {
       config
     ).then(function (res) {
       if (res.status == 200) {
+        //console.log(res.data.user_courses);
         setCategories(res.data.user_courses)
+
       }
     }).catch(function (error) {
       setErrorMsg(error.response.data.msg + "\nPlease try again!")
@@ -284,17 +325,19 @@ const getgetCategory = () => {
     )
   }
 
+
   const handleSearch = (e) => {
     setsearchText(e.nativeEvent.text)
-    console.log(e.nativeEvent.text)
+   // console.log(e.nativeEvent.text)
     if(e.nativeEvent.text != ''){
         let searched = categories.filter((category) => {
               if(category.LEVEL.toLowerCase().includes(e.nativeEvent.text.toLowerCase() )){
                 return category
+
               }
-        //    console.log(category.LEVEL)
+            //console.log(category.LEVEL)
         })
-        console.log(searched)
+        //console.log(searched)
         setsearchCategory(searched)
     }
     else{
@@ -317,7 +360,45 @@ const getgetCategory = () => {
     getCategories()
     getUserRole()
     getgetCategory()
+    getUserCategory()
   }, [])
+
+function myfontawesome (e){
+    console.log(e);
+    if(e=="All"){
+    setCategoryValue('');
+    }else{
+    setCategoryValue(e);
+    }
+
+    return (<Text styles={{marginTop: 25}}><FontAwesomeIcon style={styles.myfont} icon={faThLarge}/></Text>);
+}
+
+//console.log(categoryValue)
+    useEffect(()=>{
+         let categorySearch = categories.filter((category) => {
+
+            if(category.name.toLowerCase()== categoryValue.toLowerCase()){
+              return category
+              //console.log(category)
+            }
+
+          })
+          //console.log(catalogReceive);
+          console.log(categorySearch);
+          setCategoryLevel(categorySearch);
+
+    },[categoryValue])
+
+      useEffect(() => {
+        if(categoryValue == ""){
+             console.log('value is null')
+        }
+        else{
+            console.log('value is not null')
+
+        }
+      }, [categoryValue])
 
   return (
     <View style={styles.container}>
@@ -338,27 +419,35 @@ const getgetCategory = () => {
           userRole={props.userRole}
         />
         <Text style={styles.myCourses}>My eBooks</Text>
-        <SearchBar style={styles.searchBar} placeholder={'Search course name'}
-            onChange={e => handleSearch(e)}
-            value = {searchText}
-        />
-        <Dropdown
+        <View style={styles.myRow}>
+            <SearchBar style={styles.searchBar} placeholder={'Search course name'}
+                        onChange={e => handleSearch(e)}
+                        value = {searchText}
+                    />
+            <Dropdown
             openDropdown={openReceiverDropdown}
             setOpenDropdown={setOpenReceiverDropdown}
             selectedValue={selectedValue}
             valueStyle={styles.receiverValue}
             style={styles.receiverDropdown}
-            page={'Help'} />
+            page={'CourseCatalog'} />
+        </View>
+        <View>
+
         {openReceiverDropdown ?
-            <DropdownList
-                setSelectedValue={setSelectedValue}
-                setOpenDropdown={setOpenReceiverDropdown}
-                data={receiver}
-                valueStyle={styles.receiverValueList}
-                width={windowWidth - 95}
-                top={42}
-                left={45}
-        /> : null}
+       <DropdownList
+              setSelectedValue={e => myfontawesome(e)}
+              setOpenDropdown={setOpenReceiverDropdown}
+              data={catalogarray}
+              valueStyle={styles.receiverValueList}
+
+              width={windowWidth-50}
+              top={10}
+              left={25}
+       /> : null}
+        </View>
+
+
                                                                                                                                 {/* getCourses={getCourses} */}
         <BreadCrumbWrap modeOfCards={modeOfCards} setModeOfCards={setModeOfCards} displayGrid={true} breadcrumbObj={breadcrumb} getCourses={getCourses} />
         {displayParentVer ?
@@ -376,15 +465,27 @@ const getgetCategory = () => {
             {modeOfCards == 'list' ? courses.map(renderCourseCardList) : null}
           </View> : null}
 
+
         {!displayParentVer && categories.length != 0 ?
           <View style={styles.categoryCards}>
-            {
-            searchText == ''
+          {
+            (searchText == '' && categoryValue == '')
             ?
             <View style={styles.cardRow}>{modeOfCards == 'grid' ? categories.map(renderCategoryCard) : null}</View>
             :
-            <View style={styles.cardRow}>{modeOfCards == 'grid' ? searchCategory.map(renderCategoryCard) : null}</View>
-            }
+                (searchText != '' && categoryValue == '')
+                ?
+                <View style={styles.cardRow}>{modeOfCards == 'grid' ? searchCategory.map(renderCategoryCard) : null}</View>
+                :
+                    (searchText == '' && categoryValue != '')
+                    ?
+                    <View style={styles.cardRow}>{modeOfCards == 'grid' ? categoryLevel.map(renderCategoryCard) : null}</View>
+                    :
+
+                    <View style={styles.cardRow}>{modeOfCards == 'grid' ? searchCategory.map(renderCategoryCard) : null}</View>
+           }
+
+
             {
             searchText == ''
             ?
@@ -392,8 +493,9 @@ const getgetCategory = () => {
             :
                 modeOfCards == 'list' ? searchCategory.map(renderCategoryCardList) : null
             }
-
           </View> : null}
+
+
         <Footer style={styles.footer} />
       </ScrollView>
     </View>
@@ -440,12 +542,38 @@ const styles = StyleSheet.create({
     lineHeight: 41,
     marginTop: 15,
   },
+  myRow:{
+    backgroundColor:'#fff',
+    flexWrap:'wrap',
+    flexDirection:'row',
+    margin:5,
+    zIndex:50,
+
+  },
   searchBar: {
-    height: 20,
-    width: windowWidth - 50,
+    width: windowWidth-110,
+    height:50,
     marginTop: 7,
+    marginLeft:20,
     alignSelf: 'center',
   },
+
+  receiverDropdown:{
+    height:50,
+    width:50,
+    marginLeft:10,
+    marginRight:5,
+    color:'#ff0000',
+    alignSelf:'center',
+    paddingLeft:5,
+    paddingTop:3,
+
+  },
+    receiverValueList: {
+       width: windowWidth - 200,
+       fontSize: 16,
+    },
+
   categoryCards: {
     width: windowWidth,
     backgroundColor: '#FFFFFF',

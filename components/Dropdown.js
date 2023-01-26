@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   downArrow: {
     color: 'rgba(128,128,128,1)',
     fontSize: 20,
-    marginTop: 3,
+    marginTop: 1,
   },
 });
 

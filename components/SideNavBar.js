@@ -114,7 +114,7 @@ function SideNavBar(props) {
   if(user_role == "Student"){
           const topListOfTabs = [
             { tabName: 'Courses', icon: faGraduationCap, pageName: 'CourseCatalog' },
-            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
+//            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
             { tabName: 'Messages', icon: faCommentAlt, pageName: 'Messages' },
             { tabName: 'Help', icon: faQuestionCircle, pageName: 'Help' },
             // { tabName: 'Billing',icon: faCreditCard,pageName: 'Help' },
@@ -148,7 +148,7 @@ function SideNavBar(props) {
             { tabName: 'E-Books', icon: faGraduationCap, pageName: 'CourseCatalog' },
             { tabName: 'Class', icon: faChalkboardTeacher, pageName: 'Class' },
             { tabName: 'User', icon: faAddressCard, pageName: 'User' },
-            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
+//            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
             { tabName: 'Messages', icon: faCommentAlt, pageName: 'Messages' },
             { tabName: 'Help', icon: faQuestionCircle, pageName: 'Help' },
             // { tabName: 'Billing',icon: faCreditCard,pageName: 'Help' },

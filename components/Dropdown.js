@@ -11,8 +11,11 @@ const Dropdown = props => {
 
   const handleDropdown = () => {
     if (props.openDropdown == true) {
+        console.log("close");
+       // setOpenReceiverDropdown(false);
       props.setOpenDropdown(false);
     } else if (props.openDropdown == false) {
+        console.log("open");
       props.setOpenDropdown(true);
     }
   };

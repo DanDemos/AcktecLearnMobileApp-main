@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import { faThLarge } from '@fortawesome/free-solid-svg-icons';
+import {faSignal} from '@fortawesome/free-solid-svg-icons';
 import { useRoute } from '@react-navigation/native';
 import TopHeaderBar from '../components/TopHeaderBar';
 import SearchBar from '../components/SearchBar';
@@ -49,8 +50,23 @@ function CourseCatalog(props) {
   const [categoryValue,setCategoryValue]=useState('')
   const [categoryLevel,setCategoryLevel]=useState([])
 
-  const [selectedValue, setSelectedValue] = useState(<Text styles={{paddingTop: 5}}><FontAwesomeIcon style={styles.myfont} icon={faThLarge} /> </Text>);
+  const [userLevel,setUserLevel]=useState([])
+  const [levelArray,setLevelArray]=useState([])
+  const [levelValue,setLevelValue]=useState('')
+
+  const [levelSearch,setLevelSearch]=useState([])
+
+  const [selectedValue, setSelectedValue] = useState(<Text styles={{paddingTop: 5}}>Category  <FontAwesomeIcon style={{color:'gray'}} icon={faThLarge} /> </Text>);
+
+  const [selectedValue2, setSelectedValue2] = useState(<Text styles={{paddingTop: 5}}>Level  <FontAwesomeIcon style={{color:'gray'}} icon={faSignal} /> </Text>);
   const [openReceiverDropdown, setOpenReceiverDropdown] = useState(false);
+  const [openReceiverDropdown2, setOpenReceiverDropdown2] = useState(false);
+
+  const [viewCategory,setViewCategory]=useState('');
+  const [viewLevel,setViewLevel]=useState('');
+
+  const [dropdown,setDropDown]=useState('All');
+
 
 
   var breadcrumbArray = [];
@@ -65,6 +81,17 @@ function CourseCatalog(props) {
     });
     myarray.unshift({value:"All"})
   }, [catalogReceive])
+
+  var levelarray=[];
+  useEffect(()=>{
+    userLevel.map((receivelevel)=>{
+       levelarray.push({value:receivelevel.name})
+       //console.log(levelarray);
+       setLevelArray(levelarray);
+        //setCategoryarray(levelarray);
+    });
+    levelarray.unshift({value:"All"})
+  },[userLevel])
 
 
 
@@ -113,10 +140,13 @@ function CourseCatalog(props) {
     setDisplayParentVer(false)
     setCourseNum(0)
     setCategories([])
+
+    //console.log(breadcrumb);
     // set category breadcrumb
     if (breadcrumb.length != 0) {
       for (let i = 0; i < breadcrumb.length; i++) {
-        if (breadcrumb[i].id < id && breadcrumb[i].type == 'course') {
+        if (breadcrumb[i].id < id && breadcrumb[i].type == 'module') {
+         //console.log(breadcrumb[i]);
           breadcrumbArray.push(breadcrumb[i])
         }
       }
@@ -124,8 +154,9 @@ function CourseCatalog(props) {
     breadcrumbArray.push({
       id,
       name,
-      type: 'course'
+      type: 'module'
     })
+    //console.log(breadcrumbArray);
     setBreadcrumb(breadcrumbArray)
     // get courses
     axios.get(
@@ -134,6 +165,8 @@ function CourseCatalog(props) {
     ).then(function (res) {
           //console.log(res.data);
       if (res.status == 200) {
+           //console.log(res.data.categories);
+
 //       setCategoriesName(res.data.categories)
 //        setSubcategories(res.data.subcategories)
 //        setCourses(res.data.courses)
@@ -181,14 +214,52 @@ const getgetCategory = () => {
             },2000);
         });
    }
+
+   //get user Level
+    const getUserLevel=()=>{
+           axios.get(
+               `${BaseURL.appURL}/call/api/v1/getUserLevel`,
+               config
+           ).then(function (res){
+               //console.log(res)
+           if(res.status==200){
+               //console.log(res.data.level)
+               setUserLevel(res.data.level)
+
+            }
+           }).catch(function (error){
+               setErrorMsg(error.response.data.msg+"\nPlease try again!")
+               setTimeout(()=>{
+                   setErrorMsg('')
+               },2000);
+           });
+      }
   // get all categories
-  const getCourses = () => {
+  const getCourses = (id,name) => {
     // reset everything
     setDisplayParentVer(false)
     setCourseNum(0)
     setSubcategories([])
     setCourses([])
     setBreadcrumb([])
+
+    // set category breadcrumb
+        if (breadcrumb.length != 0) {
+          for (let i = 0; i < breadcrumb.length; i++) {
+            if (breadcrumb[i].id < id && breadcrumb[i].type == 'course') {
+             //console.log(breadcrumb[i]);
+              breadcrumbArray.push(breadcrumb[i])
+            }
+          }
+        }
+        breadcrumbArray.push({
+          id,
+          name,
+          type: 'course'
+        })
+        //console.log(breadcrumbArray);
+        setBreadcrumb(breadcrumbArray)
+
     // get categories
     axios.post(
       `${BaseURL.appURL}/call/api/v1/getUserCourses`,
@@ -200,6 +271,7 @@ const getgetCategory = () => {
       if (res.status == 200) {
         //console.log(res.data.user_courses);
         setCategories(res.data.user_courses)
+        //console.log(res.data.username)
 
       }
     }).catch(function (error) {
@@ -210,24 +282,8 @@ const getgetCategory = () => {
     });
   }
 
-  // display CourseCatalogParent component and set breadcrumb
-  const displayParentModule = (index, name) => {
-    setDisplayParentVer(true)
-    setCourseNum(index)
-    if (breadcrumb.length != 0) {
-      for (let i = 0; i < breadcrumb.length; i++) {
-        breadcrumbArray.push(breadcrumb[i])
-      }
-    }
-    breadcrumbArray.push({
-      id: index,
-      name,
-      type: 'module'
-    })
-    setBreadcrumb(breadcrumbArray)
-  }
-
   const renderCategoryCard = (category, index) => {
+  //console.log(category.LEVEL);
   var img_num = 0
       if (category.LEVEL == 'Phonics Series 1 B1') {
         img_num = 0
@@ -246,6 +302,7 @@ const getgetCategory = () => {
   }
 
   const renderCategoryCardList = (category, index) => {
+  //console.log(category.LEVEL);
   var img_num = 0
       if (category.LEVEL == 'Phonics Series 1 B1') {
         img_num = 0
@@ -263,69 +320,6 @@ const getgetCategory = () => {
     );
   }
 
-  const renderCourseCard = (course, index) => {
-    // hardcoded for the displaying of mindchamps course thumbnail
-    var num = 0
-    if (course.LEVEL == 'Phonics Series 1 B1') {
-      num = 0
-    } else if (course.LEVEL == 'Phonics Series 1 B2') {
-      num = 1
-    } else if (course.LEVEL == 'Phonics Series 1 B3') {
-      num = 2
-    } else {
-      num = null
-    }
-    // end of hardcoding
-    return (
-      // image={num} is hardcoded
-      // supposed to be image={course.image}
-      // <Card userRole={props.userRole} style={styles.card} key={'card' + course.CHAPTER} paymentStatus={paymentStatus} image={num} name={course.LEVEL} price={course.regular_price} sale={course.sale_price} subscription={course.subscription} interval={course.subscription_interval} intervalCount={course.subscription_interval_count}
-      //   press={props.userRole == 'true' ? () => {
-      //     scrollRef.current?.scrollTo({
-      //       y: 0,
-      //       animated: true,
-      //     });
-      //     displayParentModule(index, course.LEVEL);
-      //     // props.setChapter(num) is hardcoded
-      //     // supposed to be props.setChapter(course.CHAPTER)
-      //   } : () => { props.setChapter(num); props.navigation.navigate('ContainerPage') }} />
-
-      <Card userRole={props.userRole} style={styles.card} key={'card' + course.CHAPTER} paymentStatus={paymentStatus} image={num} name={course.LEVEL} price={course.regular_price} sale={course.sale_price} subscription={course.subscription} interval={course.subscription_interval} intervalCount={course.subscription_interval_count}
-        press={() => { props.setChapter(num); props.navigation.navigate('ContainerPage') }} />
-    )
-  }
-
-  const renderCourseCardList = (course, index) => {
-    // hardcoded for the displaying of mindchamps course thumbnail
-    var num = 0
-    if (course.LEVEL == 'Phonics Series 1 B1') {
-      num = 0
-    } else if (course.LEVEL == 'Phonics Series 1 B2') {
-      num = 1
-    } else if (course.LEVEL == 'Phonics Series 1 B3') {
-      num = 2
-    } else {
-      num = null
-    }
-    // end of hardcoding
-    return (
-      // image={num} is hardcoded
-      // supposed to be image={course.image}
-
-      <CardList userRole={props.userRole} style={styles.cardList} key={'cardList' + course.CHAPTER} paymentStatus={paymentStatus} image={num} name={course.LEVEL} price={course.regular_price} sale={course.sale_price} subscription={course.subscription} interval={course.subscription_interval} intervalCount={course.subscription_interval_count}
-        press={props.userRole == 'true' ? () => {
-          scrollRef.current?.scrollTo({
-            y: 0,
-            animated: true,
-          });
-          displayParentModule(index, course.LEVEL);
-          // props.setChapter(num) is hardcoded
-          // supposed to be props.setChapter(course.CHAPTER)
-        } : () => { props.setChapter(num); props.navigation.navigate('ContainerPage') }} />
-    )
-  }
-
-
   const handleSearch = (e) => {
     setsearchText(e.nativeEvent.text)
    // console.log(e.nativeEvent.text)
@@ -342,16 +336,16 @@ const getgetCategory = () => {
     }
     else{
         setsearchCategory([])
-        console.log('searchCategory has been resetted')
+        //console.log('searchCategory has been resetted')
     }
   }
 
   useEffect(() => {
     if(searchText == ''){
-        console.log('text is null')
+        //console.log('text is null')
     }
     else{
-        console.log('text is not null')
+        //console.log('text is not null')
     }
   }, [searchText])
 
@@ -361,10 +355,12 @@ const getgetCategory = () => {
     getUserRole()
     getgetCategory()
     getUserCategory()
+    getUserLevel()
   }, [])
 
 function myfontawesome (e){
-    console.log(e);
+    //console.log(e);
+    setViewCategory(e);
     if(e=="All"){
     setCategoryValue('');
     }else{
@@ -374,32 +370,122 @@ function myfontawesome (e){
     return (<Text styles={{marginTop: 25}}><FontAwesomeIcon style={styles.myfont} icon={faThLarge}/></Text>);
 }
 
-//console.log(categoryValue)
+
+function myfontawesome2 (e){
+    //console.log(e);
+    setViewCategory(e);
+    setOpenReceiverDropdown(false);
+    if(e=="All"){
+    setLevelValue('');
+
+    }else{
+    setLevelValue(e);
+    }
+
+    return (<Text styles={{marginTop: 25}}><FontAwesomeIcon style={styles.myfont} icon={faSignal}/></Text>);
+}
+    function dropdownclick1(e){
+        setDropDown('Category');
+        //console.log(openReceiverDropdown);
+        if(openReceiverDropdown == true){
+         //console.log("category close click");
+         setOpenReceiverDropdown(false);
+        }else if(openReceiverDropdown == false){
+         //console.log("category open click");
+
+         setOpenReceiverDropdown(true);
+         setOpenReceiverDropdown2(false);
+         setLevelValue('');
+         //setBreadcrumb('Category')
+
+
+        }
+
+
+
+    }
+
+    function dropdownclick2(e){
+            setDropDown('Level');
+            //console.log(openReceiverDropdown2);
+            if(openReceiverDropdown2 == true){
+             //console.log("level close click");
+             setOpenReceiverDropdown2(false);
+
+            }else if(openReceiverDropdown2 == false){
+             //console.log("level open click");
+
+             setOpenReceiverDropdown2(true);
+             setOpenReceiverDropdown(false);
+             setCategoryValue('');
+
+            }
+
+
+
+        }
+
     useEffect(()=>{
          let categorySearch = categories.filter((category) => {
-
+            //console.log(category.LevelName);
             if(category.name.toLowerCase()== categoryValue.toLowerCase()){
               return category
               //console.log(category)
+            }else{
+
             }
 
           })
           //console.log(catalogReceive);
-          console.log(categorySearch);
+          //console.log(categorySearch);
           setCategoryLevel(categorySearch);
 
     },[categoryValue])
+    useEffect(()=>{
+             let levelsearch = categories.filter((category) => {
+                //console.log(category.LevelName);
+                if(category.LevelName.toLowerCase()== levelValue.toLowerCase()){
+                  return category
+                  //console.log(category)
+                }else{
 
+                }
+
+              })
+              //console.log(catalogReceive);
+              //console.log(levelsearch);
+              setLevelSearch(levelsearch);
+
+        },[levelValue])
+
+    //console.log(categoryLevel);
       useEffect(() => {
         if(categoryValue == ""){
-             console.log('value is null')
+             console.log('category is null')
         }
         else{
-            console.log('value is not null')
+            console.log('category is not null')
 
         }
       }, [categoryValue])
+      useEffect(() => {
+              if(levelValue == ""){
+                   console.log('level is null')
+              }
+              else{
+                  console.log('level is not null')
 
+              }
+            }, [levelValue])
+
+        useEffect(()=>{
+            //console.log(viewCategory);
+        },[viewCategory])
+
+
+         useEffect(()=>{
+            //console.log(dropdown)
+         },[dropdown]);
   return (
     <View style={styles.container}>
       {openSideNav ?
@@ -419,80 +505,110 @@ function myfontawesome (e){
           userRole={props.userRole}
         />
         <Text style={styles.myCourses}>My eBooks</Text>
+
+
+           <SearchBar style={styles.searchBar} placeholder={'Search course name'}
+                                   onChange={e => handleSearch(e)}
+                                   value = {searchText}
+                      />
         <View style={styles.myRow}>
-            <SearchBar style={styles.searchBar} placeholder={'Search course name'}
-                        onChange={e => handleSearch(e)}
-                        value = {searchText}
-                    />
             <Dropdown
-            openDropdown={openReceiverDropdown}
-            setOpenDropdown={setOpenReceiverDropdown}
-            selectedValue={selectedValue}
-            valueStyle={styles.receiverValue}
-            style={styles.receiverDropdown}
-            page={'CourseCatalog'} />
+                        openDropdown={openReceiverDropdown}
+                        //onClick={console.log('shit')}
+                        setOpenDropdown={e => dropdownclick1(e)}
+                        selectedValue={selectedValue}
+                        valueStyle={styles.receiverValue1}
+                        style={styles.receiverDropdown1}
+                        page={'CourseCatalog'} />
+            <Dropdown
+                        openDropdown={openReceiverDropdown2}
+                        setOpenDropdown={e => dropdownclick2(e)}
+                        selectedValue={selectedValue2}
+                        valueStyle={styles.receiverValue2}
+                        style={styles.receiverDropdown2}
+                        page={'CourseCatalog'} />
         </View>
+
         <View>
 
-        {openReceiverDropdown ?
-       <DropdownList
-              setSelectedValue={e => myfontawesome(e)}
-              setOpenDropdown={setOpenReceiverDropdown}
-              data={catalogarray}
-              valueStyle={styles.receiverValueList}
+            {openReceiverDropdown ?
+           <DropdownList
+                  //onClick={console.log("click")}
+                  setSelectedValue={e => myfontawesome(e)}
+                  setOpenDropdown={setOpenReceiverDropdown}
+                  data={catalogarray}
+                  //data={levelArray}
+                  valueStyle={styles.receiverValueList}
 
-              width={windowWidth-50}
-              top={10}
-              left={25}
-       /> : null}
-        </View>
+                  width={windowWidth-50}
+                  top={10}
+                  left={25}
+           /> : null}
+           {openReceiverDropdown2 ?
+                      <DropdownList
+                             setSelectedValue={e => myfontawesome2(e)}
+                             setOpenDropdown={setOpenReceiverDropdown2}
+                             //data={catalogarray}
+                             data={levelArray}
+                             valueStyle={styles.receiverValueList}
+
+                             width={windowWidth-50}
+                             top={10}
+                             left={25}
+                      /> : null}
+         </View>
 
 
-                                                                                                                                {/* getCourses={getCourses} */}
-        <BreadCrumbWrap modeOfCards={modeOfCards} setModeOfCards={setModeOfCards} displayGrid={true} breadcrumbObj={breadcrumb} getCourses={getCourses} />
-        {displayParentVer ?
-          <CourseCatalogParent course={courses} index={courseNum} config={config} breadcrumb={breadcrumb} {...props} paymentStatus={paymentStatus} /> : null}
-        {!displayParentVer && subcategories.length != 0 ?
-          <View style={styles.categoryCards}>
-            <Text style={styles.bigTitle}>Sub-Categories</Text>
-            <View style={styles.cardRow}>{modeOfCards == 'grid' ? subcategories.map(renderCategoryCard) : null}</View>
-            {modeOfCards == 'list' ? subcategories.map(renderCategoryCardList) : null}
-          </View>: null}
-        {!displayParentVer && courses.length != 0 ?
-          <View style={styles.categoryCards}>
-            <Text style={styles.bigTitle}>Courses</Text>
-            <View style={styles.cardRow}>{modeOfCards == 'grid' ? courses.map(renderCourseCard) : null}</View>
-            {modeOfCards == 'list' ? courses.map(renderCourseCardList) : null}
-          </View> : null}
+
+                                                                                                                                     {/* getCourses={getCourses} */}
+        <BreadCrumbWrap modeOfCards={modeOfCards} setModeOfCards={setModeOfCards} displayGrid={true} breadcrumbObj={breadcrumb}  getBreadLevel={dropdown} getBreadCategory={viewCategory}/>
+
 
 
         {!displayParentVer && categories.length != 0 ?
           <View style={styles.categoryCards}>
           {
-            (searchText == '' && categoryValue == '')
+            (searchText == '' && categoryValue == '' && levelValue == '')
             ?
             <View style={styles.cardRow}>{modeOfCards == 'grid' ? categories.map(renderCategoryCard) : null}</View>
             :
-                (searchText != '' && categoryValue == '')
+                (searchText != '' && categoryValue == '' && levelValue == '')
                 ?
                 <View style={styles.cardRow}>{modeOfCards == 'grid' ? searchCategory.map(renderCategoryCard) : null}</View>
                 :
-                    (searchText == '' && categoryValue != '')
+                    (searchText == '' && categoryValue != '' && levelValue == '')
                     ?
                     <View style={styles.cardRow}>{modeOfCards == 'grid' ? categoryLevel.map(renderCategoryCard) : null}</View>
                     :
 
-                    <View style={styles.cardRow}>{modeOfCards == 'grid' ? searchCategory.map(renderCategoryCard) : null}</View>
+                        (searchText == '' && categoryValue == '' && levelValue != '')
+                        ?
+                        <View style={styles.cardRow}>{modeOfCards == 'grid' ? levelSearch.map(renderCategoryCard) : null}</View>
+                        :
+                        <View style={styles.cardRow}>{modeOfCards == 'grid' ? searchCategory.map(renderCategoryCard) : null}</View>
            }
+           {
+               (searchText == '' && categoryValue == '' && levelValue == '')
+               ?
+               modeOfCards == 'list' ? categories.map(renderCategoryCardList) : null
+               :
+                   (searchText != '' && categoryValue == '' && levelarray == '')
+                   ?
+                   modeOfCards == 'list' ? searchCategory.map(renderCategoryCardList) : null
+                   :
+                       (searchText == '' && categoryValue != '' && levelValue == '')
+                       ?
+                       modeOfCards == 'list' ? categoryLevel.map(renderCategoryCardList) : null
+                       :
+                        (searchText == '' && categoryLevel == '' && levelValue != '')
+                        ?
+                        modeOfCards == 'list' ? levelSearch.map(renderCategoryCardList) : null
+                        :
+                        modeOfCards == 'list' ? searchCategory.map(renderCategoryCardList) : null
+          }
 
 
-            {
-            searchText == ''
-            ?
-                modeOfCards == 'list' ? categories.map(renderCategoryCardList) : null
-            :
-                modeOfCards == 'list' ? searchCategory.map(renderCategoryCardList) : null
-            }
+
           </View> : null}
 
 
@@ -543,36 +659,60 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   myRow:{
+    marginTop:10,
     backgroundColor:'#fff',
     flexWrap:'wrap',
     flexDirection:'row',
     margin:5,
     zIndex:50,
 
+
   },
   searchBar: {
-    width: windowWidth-110,
+    width: windowWidth-50,
     height:50,
     marginTop: 7,
-    marginLeft:20,
+
     alignSelf: 'center',
   },
 
-  receiverDropdown:{
+  receiverDropdown1:{
     height:50,
-    width:50,
-    marginLeft:10,
-    marginRight:5,
+    width:200,
+    marginLeft:20,
+    //marginRight:5,
     color:'#ff0000',
     alignSelf:'center',
-    paddingLeft:5,
+    paddingLeft:10,
     paddingTop:3,
+    flex:1
 
   },
-    receiverValueList: {
-       width: windowWidth - 200,
-       fontSize: 16,
+    receiverDropdown2:{
+        height:50,
+         width:200,
+         marginLeft:15,
+         marginRight:20,
+         color:'#ff0000',
+         alignSelf:'center',
+         paddingLeft:10,
+         paddingTop:3,
+         flex:1
+
     },
+  receiverValue1: {
+          marginLeft:15,
+          fontSize: 16,
+      },
+    receiverValue2: {
+            marginLeft:25,
+            fontSize: 16,
+        },
+      receiverValueList: {
+           width:windowWidth,
+          fontSize: 16,
+      },
+
 
   categoryCards: {
     width: windowWidth,

@@ -16,9 +16,11 @@ function BreadCrumbWrap(props) {
     const renderBreadCrumb = (breadCrumb, index) => {
         return (
             <View key={index} style={{ flexDirection: 'row' }}>
-                <Text style={styles.breadcrumb}>&nbsp;&nbsp;&gt;&nbsp;&nbsp;</Text>
-                {breadCrumb.type == 'course' ? <BreadCrumb breadcrumb={breadCrumb.name} onPress={() => props.getCourses(breadCrumb.id, breadCrumb.name)} /> : null}
-                {breadCrumb.type == 'module' ? <BreadCrumb breadcrumb={breadCrumb.name} /> : null}
+
+                {breadCrumb.type == 'course' ? <View style={{flexDirection:'row'}}><BreadCrumb breadcrumb={props.getBreadLevel} /><Text style={styles.breadcrumb}>&nbsp;&nbsp;&gt;&nbsp;&nbsp;</Text></View>: null}
+
+                {breadCrumb.type == 'module' ? <BreadCrumb breadcrumb={props.getBreadCategory} /> : null}
+
             </View>
         );
     };
@@ -30,7 +32,9 @@ function BreadCrumbWrap(props) {
             <View style={{
                 flexDirection: 'row', width: windowWidth - 150, alignItems: 'center', flexWrap: 'wrap'
             }}>
-                <BreadCrumb breadcrumb={'Category'} />
+
+
+
                 {props.breadcrumbObj.map(renderBreadCrumb)}
             </View>
             {props.displayGrid ?

@@ -114,6 +114,7 @@ function CourseCatalog(props) {
     });
   }
 
+
   // check user role
   // if parent/admin/teacher, display CourseCatalogParent component with course price
   // if student/child, hide CourseCatalogParent component, redirect to Container Page screen
@@ -259,7 +260,6 @@ const getgetCategory = () => {
         })
         //console.log(breadcrumbArray);
         setBreadcrumb(breadcrumbArray)
-
     // get categories
     axios.post(
       `${BaseURL.appURL}/call/api/v1/getUserCourses`,
@@ -270,6 +270,7 @@ const getgetCategory = () => {
     ).then(function (res) {
       if (res.status == 200) {
         //console.log(res.data.user_courses);
+
         setCategories(res.data.user_courses)
         //console.log(res.data.username)
 
@@ -282,8 +283,65 @@ const getgetCategory = () => {
     });
   }
 
+  const getProgress=(person,course,category)=>{
+  //console.log(person,course,category);
+     axios.post(
+          `${BaseURL.appURL}/call/api/v1/getProgress`,
+          {
+            id: 1,
+            person_id:person,
+            course_id:course,
+            category_id:category,
+
+          },
+          config
+        ).then(function (res) {
+          if (res.status == 200) {
+          console.log(res.data.progress);
+//            console.log(res.data.category_id);
+//            console.log(res.data.course_id);
+//            console.log(res.data.userId);
+//            console.log(res.data.username);
+
+          }
+        }).catch(function (error) {
+          setErrorMsg(error.response.data.msg + "\nPlease try again!")
+          setTimeout(() => {
+            setErrorMsg('')
+          }, 2000);
+        });
+  }
+      // display CourseCatalogParent component and set breadcrumb
+      const displayParentModule = (index, name) => {
+        setDisplayParentVer(true)
+        setCourseNum(index)
+        if (breadcrumb.length != 0) {
+          for (let i = 0; i < breadcrumb.length; i++) {
+           console.log(breadcrumb[i]);
+            breadcrumbArray.push(breadcrumb[i])
+          }
+        }
+        breadcrumbArray.push({
+          id: index,
+          name,
+          type: 'module'
+        })
+        setBreadcrumb(breadcrumbArray)
+        console.log(breadcrumbArray)
+      }
+
+
   const renderCategoryCard = (category, index) => {
-  //console.log(category.LEVEL);
+   //console.log(category.MEDIA);
+   if(category.MEDIA.includes('https://mindchamps.acktec.com/')){
+    //console.log("include")
+
+   }else{
+    //console.log("not include")
+    category.MEDIA = 'https://mindchamps.acktec.com/'+ category.MEDIA;
+
+   }
+  //console.log(index);
   var img_num = 0
       if (category.LEVEL == 'Phonics Series 1 B1') {
         img_num = 0
@@ -296,12 +354,66 @@ const getgetCategory = () => {
       }
     return (
       // <Card style={styles.card} key={'card' + category.id} name={category.name} num={category.number_of_courses} press={() => getCourses(category.id, category.name)} />
-      <Card style={styles.card} key={'card' + category.NO} name={category.LEVEL} image={img_num} num={0} press={() => { props.setMedia(category.MEDIA); props.navigation.navigate('ContainerPage') }} />
+      <Card style={styles.card} key={'card' + category.NO} name={category.LEVEL} image={img_num} num={0} press={() => {
+      getProgress(category.username,category.CATEGORY_TITLE,category.CHAPTER);
+      props.setMedia(category.MEDIA); props.navigation.navigate('ContainerPage') }} />
 
     );
   }
 
+  const renderCourseCard = (course, index) => {
+      // hardcoded for the displaying of mindchamps course thumbnail
+      var num = 0
+      if (course.LEVEL == 'Phonics Series 1 B1') {
+        num = 0
+      } else if (course.LEVEL == 'Phonics Series 1 B2') {
+        num = 1
+      } else if (course.LEVEL == 'Phonics Series 1 B3') {
+        num = 2
+      } else {
+        num = null
+      }
+      // end of hardcoding
+      return (
+
+        <Card userRole={props.userRole} style={styles.card} key={'card' + course.CHAPTER} paymentStatus={paymentStatus} image={num} name={course.LEVEL} price={course.regular_price} sale={course.sale_price} subscription={course.subscription} interval={course.subscription_interval} intervalCount={course.subscription_interval_count}
+          press={() => { props.setChapter(courses.CHAPTER); props.navigation.navigate('ContainerPage') }} />
+      )
+    }
+
+    const renderCourseCardList = (course, index) => {
+        // hardcoded for the displaying of mindchamps course thumbnail
+        var num = 0
+        if (course.LEVEL == 'Phonics Series 1 B1') {
+          num = 0
+        } else if (course.LEVEL == 'Phonics Series 1 B2') {
+          num = 1
+        } else if (course.LEVEL == 'Phonics Series 1 B3') {
+          num = 2
+        } else {
+          num = null
+        }
+        // end of hardcoding
+        return (
+          // image={num} is hardcoded
+          // supposed to be image={course.image}
+          <CardList userRole={props.userRole} style={styles.cardList} key={'cardList' + course.CHAPTER} paymentStatus={paymentStatus} image={num} name={course.LEVEL} price={course.regular_price} sale={course.sale_price} subscription={course.subscription} interval={course.subscription_interval} intervalCount={course.subscription_interval_count}
+            press={props.userRole == 'true' ? () => {
+              scrollRef.current?.scrollTo({
+                y: 0,
+                animated: true,
+              });
+              displayParentModule(index, course.LEVEL);
+              // props.setChapter(num) is hardcoded
+              // supposed to be props.setChapter(course.CHAPTER)
+            } : () => { props.setChapter(courses.CHAPTER); props.navigation.navigate('ContainerPage') }} />
+        )
+      }
+
+
+
   const renderCategoryCardList = (category, index) => {
+
   //console.log(category.LEVEL);
   var img_num = 0
       if (category.LEVEL == 'Phonics Series 1 B1') {
@@ -356,6 +468,7 @@ const getgetCategory = () => {
     getgetCategory()
     getUserCategory()
     getUserLevel()
+    getProgress()
   }, [])
 
 function myfontawesome (e){

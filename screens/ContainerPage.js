@@ -30,7 +30,7 @@ function ContainerPage(props) {
     // const [moduleArray,setModuleArray] = useState([]);
     // const [scrollToIndex, setScrollToIndex] = useState(0);
     // const [successMsg, setSuccessMsg] = useState('');
-    // const [errorMsg, setErrorMsg] = useState('');
+     const [errorMsg, setErrorMsg] = useState('');
     // const [download, setDownload] = useState(false);
     const [url, setUrl] = useState('');
     // const scrollRef = useRef();

@@ -28,7 +28,7 @@ function Messages(props) {
     const config = {
         headers: { Authorization: `Bearer ${props.token}` }
     };
-
+    console.log('message-page');
     // get all messages to display in the page
     const getAllMessages = () => {
         axios.get(`${BaseURL.appURL}/call/api/v1/getAllMessages`, config

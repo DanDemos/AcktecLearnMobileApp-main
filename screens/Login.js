@@ -39,11 +39,16 @@ function Login(props) {
   const [errorMsg, setErrorMsg] = useState('');
   const [showSingleLogin, setShowSingleLogin] = useState(false);
 
+
+
+
+
   useEffect(() => {
     Orientation.lockToPortrait();
   });
 
   const login = event => {
+
     if (event) {
       event.preventDefault();
     }
@@ -88,6 +93,7 @@ function Login(props) {
           if (res.data.is_2FA == "true") {
             props.navigation.navigate('Verify');
           } else {
+            console.log("go to home")
             props.navigation.navigate('CourseCatalog');
           }
           // }
@@ -100,6 +106,11 @@ function Login(props) {
       setErrorMsg("Please fill in your username and password!");
     }
   }
+//    useEffect(()=>{
+//        if(showSingleLogin){
+//            setShowSingleLogin(true)
+//        }
+//    },[showSingleLogin])
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react'
+import React, { useEffect, Component, useState } from 'react';
 import {
     StyleSheet,
     View,
@@ -9,29 +9,87 @@ import {
 } from 'react-native'
 import PieChart from 'react-native-pie-chart';
 
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
     faAngleRight,
     faChalkboard,
     faMedal
-} from '@fortawesome/free-solid-svg-icons'
+} from '@fortawesome/free-solid-svg-icons';
 
-import SideNavBar from '../components/SideNavBar'
-import Footer from '../components/Footer'
-import GreenBox from '../components/GreenBox'
-import ProgressBar from '../components/ProgressBar'
+import { Provider } from 'react-redux'
+import SideNavBar from '../components/SideNavBar';
+import Footer from '../components/Footer';
+import GreenBox from '../components/GreenBox';
+import ProgressBar from '../components/ProgressBar';
 import Activity from '../components/Activity';
+import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux'
+
+import { decrement, increment, setGlobalToken, getUserType, setRefresh } from '../components/api connect/getuserdata'
+
+import { BaseURL } from '../screens/BaseURL';
+
 
 
 const windowWidth = Dimensions.get('window').width
 const windowHeight = Dimensions.get('window').height
 
+
+
 function Progress(props) {
+    const dispatch = useDispatch()
     const [openSideNav, setOpenSideNav] = useState(false)
+
+    const [errorMsg, setErrorMsg] = useState('')
+    const [progressCount,setProgressCount]=useState('')
+    const [progressLevel,setProgressLevel]=useState([''])
+
     const widthAndHeight = windowWidth - 220
-    const data1 = [1, 49]
-    const data2 = [0, 50]
-    const sliceColor = ['#BB1D1D', '#EFEFEF']
+    const data1 = [progressCount, 29]
+    const data2 = [15, 30]
+    const sliceColor = ['#10af41', '#af1010']
+    //console.log('progress-page');
+    //const course_count = props.course_count;
+    //console.log(props.courseCount);
+    //setProgressCount(true);
+    //console.log('progress page');
+    const pull = useSelector((state) => state.apicall.refresh);
+    const getProgress=()=>{
+               axios.get(
+                   `${BaseURL.appURL}/call/api/v1/getProgress`,
+                   config
+               ).then(function (res){
+                   //console.log(res)
+               if(res.status==200){
+                   console.log(res.data.view_course_count);
+                   //console.log(res.data.progress);
+                   setProgressLevel(res.data.progress);
+                   setProgressCount(res.data.view_course_count);
+                }
+               }).catch(function (error){
+                   setErrorMsg(error.response.data.msg+"\nPlease try again!")
+                   setTimeout(()=>{
+                       setErrorMsg('')
+                   },2000);
+               });
+          }
+
+
+//            useEffect(() => {
+//              getProgress()
+//            }, [])
+
+        useEffect(()=>{
+            //console.log(pull);
+            console.log("hey")
+            getProgress()
+            dispatch(setRefresh(0));
+        },[pull])
+
+        const courseLevel=(course)=>{
+        //console.log(course.LEVEL);
+        return  (<ProgressBar title={course.LEVEL} percent={20} />);
+        }
 
     return (
         <View style={styles.container}>
@@ -56,7 +114,7 @@ function Progress(props) {
                     <View style={styles.wrap}>
                         <Text style={styles.title}>Overview</Text>
                         <View style={styles.block}>
-                            <Text style={styles.graphTitle}>50 E-Books in total</Text>
+                            <Text style={styles.graphTitle}>{props.courseCount} E-Books in total</Text>
                             <View style={styles.chartWrap}>
                                 <PieChart
                                     widthAndHeight={widthAndHeight}
@@ -67,7 +125,7 @@ function Progress(props) {
                                     coverFill={'#FFF'}
                                     style={styles.piechart}
                                 />
-                                <Text style={styles.completedTxt}>0 completed</Text>
+                                <Text style={styles.completedTxt1}>{progressCount} completed</Text>
                             </View>
                             <View style={styles.legendWrap}>
                                 <View style={styles.legend}>
@@ -93,35 +151,13 @@ function Progress(props) {
                                     coverFill={'#FFF'}
                                     style={styles.piechart}
                                 />
-                                <Text style={styles.completedTxt}>Quizzes Completed 0/50</Text>
+                                <Text style={styles.completedTxt2}>Quizzes {"\n"} Completed{"\n"} 0/50</Text>
                             </View>
 
                         </View>
                     </View>
                     {/* recent activity block */}
-                    <View style={styles.wrap}>
-                        <Text style={styles.title}>Recent Activity</Text>
-                        <TouchableOpacity style={styles.block} onPress={() => props.navigation.navigate('Progress_RecentActivity')}>
-                            <FontAwesomeIcon
-                                icon={faAngleRight}
-                                style={styles.arrow}
-                                size={20}
-                            />
-                            <View style={styles.activityWrap}>
-                                <Text style={styles.date}>18 March 2022</Text>
-                                <Activity text={'You have been assigned to new E-Books'} icon={faChalkboard} color={'rgb(66, 160, 132)'} />
-                                <View style={styles.divider}></View>
-                                <Activity text={'You have completed Risk Management Concept 1!'} icon={faMedal} color={'rgb(253, 203, 93)'} />
-                            </View>
-                            <View style={styles.activityWrap}>
-                                <Text style={styles.date}>18 March 2022</Text>
-                                <Activity text={'You have been assigned to new E-Books'} icon={faChalkboard} color={'rgb(66, 160, 132)'} />
-                                <View style={styles.divider}></View>
-                                <Activity text={'You have completed Risk Management Concept 1!'} icon={faMedal} color={'rgb(253, 203, 93)'} />
-                            </View>
 
-                        </TouchableOpacity>
-                    </View>
                     {/* progress block */}
                     <View style={styles.wrap}>
                         <Text style={styles.title}>Progress</Text>
@@ -131,11 +167,8 @@ function Progress(props) {
                                 style={styles.arrow}
                                 size={20}
                             />
-                            <ProgressBar title={'E-Book title 1'} percent={10} />
-                            <ProgressBar title={'E-Book title 2'} percent={20} />
-                            <ProgressBar title={'E-Book title 3'} percent={30} />
-                            <ProgressBar title={'E-Book title 4'} percent={40} />
-                            <ProgressBar title={'E-Book title 5'} percent={50} />
+
+                            <View>{progressLevel.map(courseLevel)}</View>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -194,6 +227,8 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     piechart: {
+        position:'relative',
+        width:windowWidth,
         margin: 15,
     },
     graphTitle: {
@@ -205,10 +240,25 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     chartWrap: {
+
         alignItems: 'center',
         justifyContent: 'center'
     },
-    completedTxt: {
+    completedTxt1: {
+            fontFamily: 'Montserrat-SemiBold',
+            color: 'rgba(0,0,0,0.5)',
+            fontSize: 16,
+            lineHeight: 26,
+            textAlign: 'center',
+            position: 'absolute',
+            width: 100,
+            height: 100,
+            top: '60%',
+//            left: '50%',
+            transform:([{translateX: -50}]),
+            transform:([{translateY: -50}])
+        },
+    completedTxt2: {
         fontFamily: 'Montserrat-SemiBold',
         color: 'rgba(0,0,0,0.5)',
         fontSize: 16,
@@ -217,7 +267,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: 100,
         height: 100,
-        top: 75,
+        top: '50%',
+//        left: '50%',
+       transform:([{translateX: -50}]),
+       transform:([{translateY: -50}])
     },
     legendWrap: {
         flexDirection: 'row',

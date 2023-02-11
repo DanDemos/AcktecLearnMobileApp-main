@@ -18,13 +18,14 @@ import {
   faSignOutAlt,
   faAddressCard
 } from '@fortawesome/free-solid-svg-icons';
+import { Provider } from 'react-redux'
 import NavTab from './NavTab';
 import { useRoute } from '@react-navigation/native';
 import { BaseURL } from './../screens/BaseURL';
 import Orientation from 'react-native-orientation';
 
 import { useSelector, useDispatch } from 'react-redux'
-import { decrement, increment, setGlobalToken, getUserType } from '../components/api connect/getuserdata'
+import { decrement, increment, setGlobalToken, getUserType, setRefresh } from '../components/api connect/getuserdata'
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -35,19 +36,25 @@ const bottomListOfTabs = [
 ];
 
 function SideNavBar(props) {
+    const dispatch = useDispatch()
     const user_role = useSelector((state) => state.apicall.user_role);
     console.log(user_role);
-    console.log('user_role');
+    console.log('User_role');
+
+//    const number = useSelector((state)=>state.apicall.refresh);
+//    console.log(number);
 
   const route = useRoute();
   const [selectedPage, setSelectedPage] = useState(route.name);
   const [frontendMenu, setFrontendMenu] = useState([]);
   const [errorMsg, setErrorMsg] = useState('');
+//  const [refresh,setRefresh]=useState();
   const config = {
     headers: { Authorization: `Bearer ${props.token}` }
   };
 
   useEffect(() => {
+
     Orientation.lockToPortrait();
   });
 
@@ -58,6 +65,7 @@ function SideNavBar(props) {
     ).then(function (res) {
       if (res.status == 200) {
         setFrontendMenu(res.data.frontendmenu);
+        //console.log(res.data.frontendmenu);
       }
     }).catch(function (error) {
       setErrorMsg(error.response.data.msg + "\nPlease try again!");
@@ -92,7 +100,14 @@ function SideNavBar(props) {
           setErrorMsg('');
         }, 2000);
       });
-    } else {
+    } else if(page == 'CourseCatalog'){
+     dispatch(setRefresh(1));
+     console.log("course page")
+      props.setOpenSideNav(false);
+      props.navigation.navigate(page);
+    }
+    else {
+
       props.setOpenSideNav(false);
       props.navigation.navigate(page);
     }
@@ -111,10 +126,15 @@ function SideNavBar(props) {
     );
   };
 
+//    useEffect(()=>{
+//        console.log(props.refresh)
+//    },[props.refresh])
+
   if(user_role == "Student"){
+  console.log(selectedPage);
           const topListOfTabs = [
             { tabName: 'Courses', icon: faGraduationCap, pageName: 'CourseCatalog' },
-//            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
+            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
             { tabName: 'Messages', icon: faCommentAlt, pageName: 'Messages' },
             { tabName: 'Help', icon: faQuestionCircle, pageName: 'Help' },
             // { tabName: 'Billing',icon: faCreditCard,pageName: 'Help' },
@@ -149,9 +169,9 @@ function SideNavBar(props) {
             { tabName: 'Class', icon: faChalkboardTeacher, pageName: 'Class' },
             { tabName: 'User', icon: faAddressCard, pageName: 'User' },
 //            { tabName: 'Progress', icon: faChartLine, pageName: 'Progress' },
-            { tabName: 'Messages', icon: faCommentAlt, pageName: 'Messages' },
+//            { tabName: 'Messages', icon: faCommentAlt, pageName: 'Messages' },
             { tabName: 'Help', icon: faQuestionCircle, pageName: 'Help' },
-            // { tabName: 'Billing',icon: faCreditCard,pageName: 'Help' },
+//             { tabName: 'Billing',icon: faCreditCard,pageName: 'Help' },
           ];
 
           return (

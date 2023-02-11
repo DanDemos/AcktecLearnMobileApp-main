@@ -6,6 +6,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import { faThLarge } from '@fortawesome/free-solid-svg-icons';
 import {faSignal} from '@fortawesome/free-solid-svg-icons';
@@ -23,11 +24,15 @@ import Dropdown from '../components/Dropdown';
 import DropdownList from '../components/DropdownList';
 
 import { BaseURL } from '../screens/BaseURL';
+import { useSelector, useDispatch } from 'react-redux'
+import Progress from './Progress';
+import { decrement, increment, setGlobalToken, getUserType, setRefresh } from '../components/api connect/getuserdata'
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 function CourseCatalog(props) {
+  const dispatch = useDispatch()
   const [openSideNav, setOpenSideNav] = useState(false)
   const [modeOfCards, setModeOfCards] = useState('grid')
   const [categories, setCategories] = useState([])
@@ -61,13 +66,15 @@ function CourseCatalog(props) {
   const [selectedValue2, setSelectedValue2] = useState(<Text styles={{paddingTop: 5}}>Level  <FontAwesomeIcon style={{color:'gray'}} icon={faSignal} /> </Text>);
   const [openReceiverDropdown, setOpenReceiverDropdown] = useState(false);
   const [openReceiverDropdown2, setOpenReceiverDropdown2] = useState(false);
+  const [sentProgress,setSentProgress]= useState(false);
 
   const [viewCategory,setViewCategory]=useState('');
   const [viewLevel,setViewLevel]=useState('');
 
   const [dropdown,setDropDown]=useState('All');
 
-
+    const pull = useSelector((state) => state.apicall.refresh);
+    //console.log(pull);
 
   var breadcrumbArray = [];
   var myarray=[];
@@ -75,7 +82,7 @@ function CourseCatalog(props) {
  useEffect(() => {
     catalogReceive.map((receivename)=>{
         myarray.push({value:receivename.name});
-        //console.log(myarray);
+        console.log(myarray);
         setCategoryarray(myarray);
 
     });
@@ -83,12 +90,12 @@ function CourseCatalog(props) {
   }, [catalogReceive])
 
   var levelarray=[];
+
   useEffect(()=>{
     userLevel.map((receivelevel)=>{
        levelarray.push({value:receivelevel.name})
-       //console.log(levelarray);
+       console.log(levelarray);
        setLevelArray(levelarray);
-        //setCategoryarray(levelarray);
     });
     levelarray.unshift({value:"All"})
   },[userLevel])
@@ -180,14 +187,14 @@ function CourseCatalog(props) {
     });
   }
 
-const getgetCategory = () => {
+    const getgetCategory = () => {
     axios.get(
       `${BaseURL.appURL}/call/api/v1/getCategory`,
       config
     ).then(function (res) {
             //console.log(res)
       if (res.status == 200) {
-            //console.log(res.data)
+            console.log(res.data)
       }
     }).catch(function (error) {
       setErrorMsg(error.response.data.msg + "\nPlease try again!")
@@ -235,8 +242,10 @@ const getgetCategory = () => {
                },2000);
            });
       }
+
   // get all categories
   const getCourses = (id,name) => {
+    console.log("hey,pull againg")
     // reset everything
     setDisplayParentVer(false)
     setCourseNum(0)
@@ -268,14 +277,17 @@ const getgetCategory = () => {
       },
       config
     ).then(function (res) {
+        console.log("pull again")
       if (res.status == 200) {
         //console.log(res.data.user_courses);
 
-        setCategories(res.data.user_courses)
-        //console.log(res.data.username)
+        setCategories(res.data.user_courses);
+        console.log(res.data.courses_length);
 
+        props.setCourseCount(res.data.courses_length);
       }
     }).catch(function (error) {
+        console.log('error');
       setErrorMsg(error.response.data.msg + "\nPlease try again!")
       setTimeout(() => {
         setErrorMsg('')
@@ -283,34 +295,43 @@ const getgetCategory = () => {
     });
   }
 
-  const getProgress=(person,course,category)=>{
+  const setProgress=(person,category,course)=>{
   //console.log(person,course,category);
      axios.post(
-          `${BaseURL.appURL}/call/api/v1/getProgress`,
+          `${BaseURL.appURL}/call/api/v1/setProgress`,
           {
-            id: 1,
+
             person_id:person,
-            course_id:course,
             category_id:category,
+            course_id:course
+
 
           },
           config
         ).then(function (res) {
+            //console.log(res.data);
           if (res.status == 200) {
-          console.log(res.data.progress);
+          //console.log(res.data.progress);
+          //console.log(res.data.view_course_count);
+          setSentProgress(true);
 //            console.log(res.data.category_id);
 //            console.log(res.data.course_id);
 //            console.log(res.data.userId);
 //            console.log(res.data.username);
 
+
+
           }
         }).catch(function (error) {
+            console.log('error');
           setErrorMsg(error.response.data.msg + "\nPlease try again!")
           setTimeout(() => {
             setErrorMsg('')
           }, 2000);
         });
   }
+
+
       // display CourseCatalogParent component and set breadcrumb
       const displayParentModule = (index, name) => {
         setDisplayParentVer(true)
@@ -355,8 +376,9 @@ const getgetCategory = () => {
     return (
       // <Card style={styles.card} key={'card' + category.id} name={category.name} num={category.number_of_courses} press={() => getCourses(category.id, category.name)} />
       <Card style={styles.card} key={'card' + category.NO} name={category.LEVEL} image={img_num} num={0} press={() => {
-      getProgress(category.username,category.CATEGORY_TITLE,category.CHAPTER);
-      props.setMedia(category.MEDIA); props.navigation.navigate('ContainerPage') }} />
+
+      props.setMedia(category.MEDIA); props.navigation.navigate('ContainerPage');
+       setProgress(category.username,category.CATEGORY_TITLE,category.CHAPTER);}} />
 
     );
   }
@@ -377,7 +399,8 @@ const getgetCategory = () => {
       return (
 
         <Card userRole={props.userRole} style={styles.card} key={'card' + course.CHAPTER} paymentStatus={paymentStatus} image={num} name={course.LEVEL} price={course.regular_price} sale={course.sale_price} subscription={course.subscription} interval={course.subscription_interval} intervalCount={course.subscription_interval_count}
-          press={() => { props.setChapter(courses.CHAPTER); props.navigation.navigate('ContainerPage') }} />
+          press={() => { props.setChapter(num); props.navigation.navigate('ContainerPage');
+           }} />
       )
     }
 
@@ -406,7 +429,8 @@ const getgetCategory = () => {
               displayParentModule(index, course.LEVEL);
               // props.setChapter(num) is hardcoded
               // supposed to be props.setChapter(course.CHAPTER)
-            } : () => { props.setChapter(courses.CHAPTER); props.navigation.navigate('ContainerPage') }} />
+            } : () => { props.setChapter(num); props.navigation.navigate('ContainerPage');
+                        }} />
         )
       }
 
@@ -426,7 +450,8 @@ const getgetCategory = () => {
         img_num = null
       }
     return (
-      <CardList style={styles.cardList} key={'cardList' + category.NO} name={category.LEVEL} image={img_num} num={0} press={() => { props.setMedia(category.MEDIA); props.navigation.navigate('ContainerPage') }} />
+      <CardList style={styles.cardList} key={'cardList' + category.NO} name={category.LEVEL} image={img_num} num={0} press={() => { props.setMedia(category.MEDIA); props.navigation.navigate('ContainerPage');
+       setProgress(category.username,category.CATEGORY_TITLE,category.CHAPTER);}} />
 //      <CardList style={styles.cardList} key={'cardList' + category.NO} name={category.LEVEL} image={img_num} num={0} press={() => getCourses(category.NO, category.HEADING)} />
       // <CardList style={styles.cardList} key={'cardList' + category.id} name={category.name} num={category.number_of_courses} press={() => { alert('HELLO WORLD') }} />
     );
@@ -461,17 +486,19 @@ const getgetCategory = () => {
     }
   }, [searchText])
 
-  useEffect(() => {
-    getCourses()
-    getCategories()
-    getUserRole()
-    getgetCategory()
-    getUserCategory()
-    getUserLevel()
-    getProgress()
-  }, [])
+//  useEffect(() => {
+//    getCourses()
+//    getCategories()
+//    getUserRole()
+//    getgetCategory()
+//    getUserCategory()
+//    getUserLevel()
+//    getUserLevel()
+//
+//
+//  }, [])
 
-function myfontawesome (e){
+    function myfontawesome (e){
     //console.log(e);
     setViewCategory(e);
     if(e=="All"){
@@ -483,8 +510,7 @@ function myfontawesome (e){
     return (<Text styles={{marginTop: 25}}><FontAwesomeIcon style={styles.myfont} icon={faThLarge}/></Text>);
 }
 
-
-function myfontawesome2 (e){
+    function myfontawesome2 (e){
     //console.log(e);
     setViewCategory(e);
     setOpenReceiverDropdown(false);
@@ -497,6 +523,7 @@ function myfontawesome2 (e){
 
     return (<Text styles={{marginTop: 25}}><FontAwesomeIcon style={styles.myfont} icon={faSignal}/></Text>);
 }
+
     function dropdownclick1(e){
         setDropDown('Category');
         //console.log(openReceiverDropdown);
@@ -540,7 +567,8 @@ function myfontawesome2 (e){
 
     useEffect(()=>{
          let categorySearch = categories.filter((category) => {
-            //console.log(category.LevelName);
+            //console.log(categoryValue);
+            //console.log(category.CategoryName);
             if(category.name.toLowerCase()== categoryValue.toLowerCase()){
               return category
               //console.log(category)
@@ -556,7 +584,8 @@ function myfontawesome2 (e){
     },[categoryValue])
     useEffect(()=>{
              let levelsearch = categories.filter((category) => {
-                //console.log(category.LevelName);
+                //console.log(levelValue);
+                //console.log(category.LevelName)
                 if(category.LevelName.toLowerCase()== levelValue.toLowerCase()){
                   return category
                   //console.log(category)
@@ -591,14 +620,23 @@ function myfontawesome2 (e){
               }
             }, [levelValue])
 
-        useEffect(()=>{
-            //console.log(viewCategory);
-        },[viewCategory])
+useEffect(()=>{
+       //console.log(pull);
+       console.log("course pull")
+       getCourses()
+       getCategories()
+       getUserRole()
+       getgetCategory()
+       getUserCategory()
+       getUserLevel()
+       getUserLevel()
+      dispatch(setRefresh(0));
 
+    //props.setRefresh(0)
+},[pull])
 
-         useEffect(()=>{
-            //console.log(dropdown)
-         },[dropdown]);
+//console.log(props.refresh)
+
   return (
     <View style={styles.container}>
       {openSideNav ?
@@ -669,6 +707,8 @@ function myfontawesome2 (e){
                              top={10}
                              left={25}
                       /> : null}
+
+
          </View>
 
 

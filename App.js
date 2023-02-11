@@ -40,6 +40,8 @@ const App = () => {
   const [cartQuantity, setCartQuantity] = useState([])
   const [userRole, setUserRole] = useState()
   const [media, setMedia] = useState('')
+  const [courseCount, setCourseCount] = useState('')
+  const [refresh,setRefresh]=useState(0)
   return (
   <Provider store={store}>
     <NavigationContainer>
@@ -66,7 +68,7 @@ const App = () => {
           {(props) => <ResetPassword {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} />}
         </Stack.Screen>
         <Stack.Screen name="CourseCatalog" >
-          {(props) => <CourseCatalog {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} setChapter={setChapter} setMedia={setMedia} setCartItems={setCartItems} cartItems={cartItems} setCartQuantity={setCartQuantity} cartQuantity={cartQuantity} setUserRole={setUserRole} userRole={userRole} />}
+          {(props) => <CourseCatalog {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} setChapter={setChapter} setMedia={setMedia} setCourseCount={setCourseCount} setCartItems={setCartItems} cartItems={cartItems} setCartQuantity={setCartQuantity} cartQuantity={cartQuantity} setUserRole={setUserRole} userRole={userRole} setRefresh={setRefresh} refresh={refresh} />}
         </Stack.Screen>
         <Stack.Screen name="ContainerPage" >
           {(props) => <ContainerPage {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} chapter={chapter} media={media} />}
@@ -90,7 +92,7 @@ const App = () => {
           {(props) => <ClassUsers {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} cartQuantity={cartQuantity} userRole={userRole} />}
         </Stack.Screen>
         <Stack.Screen name="Progress" >
-          {(props) => <Progress {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} cartQuantity={cartQuantity} userRole={userRole} />}
+          {(props) => <Progress {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} cartQuantity={cartQuantity} userRole={userRole} courseCount={courseCount} />}
         </Stack.Screen>
         <Stack.Screen name="Progress_RecentActivity" >
           {(props) => <Progress_RecentActivity {...props} token={token} setToken={setToken} setIsLoggedIn={setIsLoggedIn} cartQuantity={cartQuantity} userRole={userRole} />}
